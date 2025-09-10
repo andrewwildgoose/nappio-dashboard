@@ -1,11 +1,9 @@
 <script lang="ts">
-	import DataTable from '$lib/components/DataTable.svelte';
-	import AddDataForm from '$lib/components/AddDataForm.svelte';
+	import SubscriptionTable from '$lib/components/SubscriptionTable.svelte';
 	import { onMount } from 'svelte';
-	import { mockApi, type TeamDataItem } from '$lib/api';
+	import { mockApi, type SubscriptionData } from '$lib/api';
 
-	let data = $state<TeamDataItem[]>([]);
-	let showForm = $state(false);
+	let data = $state<SubscriptionData[]>([]);
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 
@@ -14,15 +12,26 @@
 			isLoading = true;
 			error = null;
 
-			const response = await mockApi.getTeamData();
+			// Use real API in production, mock API for development
+			const isProduction = import.meta.env.PROD;
+			let response;
+			
+			if (isProduction) {
+				// Import real API for production
+				const { api } = await import('$lib/api');
+				response = await api.getSubscriptions();
+			} else {
+				// Use mock API for development
+				response = await mockApi.getSubscriptions();
+			}
 
 			if (response.success && response.data) {
 				data = response.data;
 			} else {
-				throw new Error(response.error || 'Failed to load data');
+				throw new Error(response.error || 'Failed to load subscription data');
 			}
 		} catch (err) {
-			console.error('Error loading data:', err);
+			console.error('Error loading subscriptions:', err);
 			error = err instanceof Error ? err.message : 'Unknown error occurred';
 		} finally {
 			isLoading = false;
@@ -32,35 +41,23 @@
 	onMount(() => {
 		loadData();
 	});
-
-	function handleDataAdded() {
-		loadData();
-		showForm = false;
-	}
 </script>
 
 <svelte:head>
-	<title>Nappio Dashboard</title>
-	<meta name="description" content="Internal team dashboard for Nappio nappy laundry service" />
+	<title>Nappio Subscription Dashboard</title>
+	<meta name="description" content="Subscription management dashboard for Nappio nappy laundry service" />
 </svelte:head>
 
 <div class="dashboard">
 	<div class="dashboard-header">
-		<h1 class="mb-2 text-3xl font-bold text-gray-900">Nappio Team Dashboard</h1>
-		<p class="mb-6 text-gray-600">Manage your nappy laundry service operations</p>
+		<h1 class="mb-2 text-3xl font-bold text-gray-900">Nappio Subscription Dashboard</h1>
+		<p class="mb-6 text-gray-600">Manage customer subscriptions and track progress</p>
 
 		<div class="header-actions">
 			<button
-				onclick={() => (showForm = !showForm)}
-				class="mr-3 rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
-			>
-				{showForm ? 'Cancel' : 'Add New Item'}
-			</button>
-
-			<button
 				onclick={loadData}
 				disabled={isLoading}
-				class="rounded-md bg-gray-100 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200 disabled:opacity-50"
+				class="rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
 			>
 				{isLoading ? 'Loading...' : 'Refresh'}
 			</button>
@@ -79,21 +76,15 @@
 		</div>
 	{/if}
 
-	{#if showForm}
-		<div class="form-container">
-			<AddDataForm onDataAdded={handleDataAdded} />
-		</div>
-	{/if}
-
 	<div class="content-area">
 		{#if isLoading}
 			<div class="loading-state">
 				<div class="spinner"></div>
-				<p class="mt-4 text-gray-600">Loading dashboard data...</p>
+				<p class="mt-4 text-gray-600">Loading subscription data...</p>
 			</div>
 		{:else}
 			<div class="table-container">
-				<DataTable {data} onDataUpdated={loadData} />
+				<SubscriptionTable {data} onDataUpdated={loadData} />
 			</div>
 		{/if}
 	</div>
@@ -101,28 +92,28 @@
 	<!-- Stats Cards -->
 	<div class="stats-grid">
 		<div class="stat-card">
-			<h3 class="text-lg font-semibold text-gray-900">Total Items</h3>
+			<h3 class="text-lg font-semibold text-gray-900">Total Subscriptions</h3>
 			<p class="text-3xl font-bold text-blue-600">{data.length}</p>
 		</div>
 
 		<div class="stat-card">
 			<h3 class="text-lg font-semibold text-gray-900">Active</h3>
 			<p class="text-3xl font-bold text-green-600">
-				{data.filter((item) => item.status === 'Active').length}
+				{data.filter((item) => item.progress_status === 'active').length}
 			</p>
 		</div>
 
 		<div class="stat-card">
 			<h3 class="text-lg font-semibold text-gray-900">Pending</h3>
 			<p class="text-3xl font-bold text-yellow-600">
-				{data.filter((item) => item.status === 'Pending').length}
+				{data.filter((item) => item.progress_status === 'pending').length}
 			</p>
 		</div>
 
 		<div class="stat-card">
-			<h3 class="text-lg font-semibold text-gray-900">In Progress</h3>
-			<p class="text-3xl font-bold text-blue-600">
-				{data.filter((item) => item.status === 'In Progress').length}
+			<h3 class="text-lg font-semibold text-gray-900">Meeting Scheduled</h3>
+			<p class="text-3xl font-bold text-purple-600">
+				{data.filter((item) => item.progress_status === 'meeting_scheduled').length}
 			</p>
 		</div>
 	</div>
@@ -153,14 +144,6 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-	}
-
-	.form-container {
-		margin-bottom: 2rem;
-		padding: 1.5rem;
-		border: 1px solid #e5e7eb;
-		border-radius: 0.5rem;
-		background-color: #f9fafb;
 	}
 
 	.content-area {

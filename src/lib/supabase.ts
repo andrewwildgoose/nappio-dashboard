@@ -6,33 +6,71 @@ export const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_K
 export type Database = {
 	public: {
 		Tables: {
-			team_data: {
+			user_subscriptions: {
 				Row: {
-					id: number;
-					created_at: string;
-					title: string;
-					description: string;
-					status: string;
-					assigned_to: string;
-					updated_at: string;
+					id: string;
+					user_id: string;
+					status: 'pending' | 'setup_paid' | 'meeting_scheduled' | 'checkout_sent' | 'active' | 'canceled';
+					subscribed_at: string;
+					cancelled_at: string | null;
+					last_payment_date: string | null;
+					next_payment_date: string | null;
+					stripe_subscription_id: string | null;
+					customer_id: string | null;
+					address_id: string | null;
+					baby_dob: string | null;
+					baby_weight_at_start: number | null;
 				};
 				Insert: {
-					id?: number;
-					created_at?: string;
-					title: string;
-					description: string;
-					status?: string;
-					assigned_to: string;
-					updated_at?: string;
+					id?: string;
+					user_id: string;
+					status?: 'pending' | 'setup_paid' | 'meeting_scheduled' | 'checkout_sent' | 'active' | 'canceled';
+					subscribed_at?: string;
+					cancelled_at?: string | null;
+					last_payment_date?: string | null;
+					next_payment_date?: string | null;
+					stripe_subscription_id?: string | null;
+					customer_id?: string | null;
+					address_id?: string | null;
+					baby_dob?: string | null;
+					baby_weight_at_start?: number | null;
 				};
 				Update: {
-					id?: number;
-					created_at?: string;
-					title?: string;
-					description?: string;
-					status?: string;
-					assigned_to?: string;
-					updated_at?: string;
+					id?: string;
+					user_id?: string;
+					status?: 'pending' | 'setup_paid' | 'meeting_scheduled' | 'checkout_sent' | 'active' | 'canceled';
+					subscribed_at?: string;
+					cancelled_at?: string | null;
+					last_payment_date?: string | null;
+					next_payment_date?: string | null;
+					stripe_subscription_id?: string | null;
+					customer_id?: string | null;
+					address_id?: string | null;
+					baby_dob?: string | null;
+					baby_weight_at_start?: number | null;
+				};
+			};
+			subscription_progress: {
+				Row: {
+					id: string;
+					subscription_id: string;
+					last_updated: string;
+					status: 'pending' | 'setup_paid' | 'meeting_scheduled' | 'checkout_sent' | 'active' | 'canceled';
+					meeting_date: string | null;
+				};
+				Insert: {
+					id?: string;
+					subscription_id: string;
+					last_updated?: string;
+					status?: 'pending' | 'setup_paid' | 'meeting_scheduled' | 'checkout_sent' | 'active' | 'canceled';
+					meeting_date?: string | null;
+				};
+				Update: {
+					id?: string;
+					subscription_id?: string;
+					last_updated?: string;
+					status?: 'pending' | 'setup_paid' | 'meeting_scheduled' | 'checkout_sent' | 'active' | 'canceled';
+					meeting_date?: string | null;
 				};
 			};
 		};
