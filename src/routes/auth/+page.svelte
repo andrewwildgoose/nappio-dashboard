@@ -1,86 +1,34 @@
 <script lang="ts">
-	import { supabase } from '$lib/supabase';
-	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import type { ActionData } from './$types';
 
-	let email = $state('');
-	let password = $state('');
-	let isLogin = $state(true);
+	let { data, form }: { data: any; form?: ActionData } = $props();
+
 	let isLoading = $state(false);
-	let errorMessage = $state('');
-
-	async function handleAuth(event: Event) {
-		event.preventDefault();
-
-		if (!email || !password) {
-			errorMessage = 'Please fill in all fields';
-			return;
-		}
-
-		isLoading = true;
-		errorMessage = '';
-
-		try {
-			if (isLogin) {
-				// Mock login for demonstration
-				console.log('Logging in with:', { email, password });
-
-				// Simulate API call delay
-				await new Promise((resolve) => setTimeout(resolve, 1000));
-
-				// For demo purposes, accept any credentials
-				localStorage.setItem(
-					'nappio_session',
-					JSON.stringify({
-						user: { email },
-						token: 'demo-token'
-					})
-				);
-
-				goto('/');
-			} else {
-				// Mock signup for demonstration
-				console.log('Signing up with:', { email, password });
-
-				// Simulate API call delay
-				await new Promise((resolve) => setTimeout(resolve, 1000));
-
-				alert('Account created successfully! Please log in.');
-				isLogin = true;
-			}
-		} catch (error) {
-			console.error('Auth error:', error);
-			errorMessage = 'Authentication failed. Please try again.';
-		} finally {
-			isLoading = false;
-		}
-	}
-
-	function toggleMode() {
-		isLogin = !isLogin;
-		errorMessage = '';
-	}
 </script>
 
 <svelte:head>
-	<title>Authentication - Nappio Dashboard</title>
-	<meta name="description" content="Login to Nappio team dashboard" />
+	<title>Sign In - Nappio Dashboard</title>
+	<meta name="description" content="Sign in to Nappio team dashboard" />
 </svelte:head>
 
 <div class="auth-container">
 	<div class="auth-card">
 		<div class="auth-header">
-			<h1 class="mb-2 text-3xl font-bold text-gray-900">
-				{isLogin ? 'Welcome Back' : 'Create Account'}
-			</h1>
-			<p class="text-gray-600">
-				{isLogin ? 'Sign in to your Nappio dashboard' : 'Join the Nappio team portal'}
-			</p>
+			<h1 class="mb-2 text-3xl font-bold text-gray-900">Welcome Back</h1>
+			<p class="text-gray-600">Sign in to your Nappio admin dashboard</p>
 		</div>
 
-		<form onsubmit={handleAuth} class="auth-form">
-			{#if errorMessage}
+		<form method="POST" action="?/signin" use:enhance={() => {
+			isLoading = true;
+			return async ({ update }) => {
+				isLoading = false;
+				await update();
+			};
+		}} class="auth-form">
+			{#if form?.error}
 				<div class="error-message">
-					{errorMessage}
+					{form.error}
 				</div>
 			{/if}
 
@@ -88,11 +36,11 @@
 				<label for="email" class="form-label">Email Address</label>
 				<input
 					id="email"
+					name="email"
 					type="email"
-					bind:value={email}
 					required
 					class="form-input"
-					placeholder="Enter your email"
+					placeholder="Enter your team email"
 				/>
 			</div>
 
@@ -100,8 +48,8 @@
 				<label for="password" class="form-label">Password</label>
 				<input
 					id="password"
+					name="password"
 					type="password"
-					bind:value={password}
 					required
 					class="form-input"
 					placeholder="Enter your password"
@@ -110,25 +58,17 @@
 
 			<button type="submit" disabled={isLoading} class="auth-button">
 				{#if isLoading}
-					Processing...
+					Signing In...
 				{:else}
-					{isLogin ? 'Sign In' : 'Create Account'}
+					Sign In
 				{/if}
 			</button>
-
-			<div class="auth-toggle">
-				<p>
-					{isLogin ? "Don't have an account?" : 'Already have an account?'}
-					<button type="button" onclick={toggleMode} class="toggle-link">
-						{isLogin ? 'Sign up' : 'Sign in'}
-					</button>
-				</p>
-			</div>
 		</form>
 
-		<div class="demo-notice">
-			<p class="text-sm text-gray-500">
-				<strong>Demo Mode:</strong> Use any email and password to sign in.
+		<div class="team-notice">
+			<p class="text-sm text-gray-600">
+				<strong>Team Access Only:</strong> This dashboard is restricted to authorized team members.
+				Contact your administrator if you need access.
 			</p>
 		</div>
 	</div>
@@ -210,24 +150,6 @@
 		cursor: not-allowed;
 	}
 
-	.auth-toggle {
-		text-align: center;
-		margin-top: 1rem;
-	}
-
-	.toggle-link {
-		color: #2563eb;
-		font-weight: 600;
-		background: none;
-		border: none;
-		cursor: pointer;
-		text-decoration: underline;
-	}
-
-	.toggle-link:hover {
-		color: #1d4ed8;
-	}
-
 	.error-message {
 		background: #fee2e2;
 		color: #dc2626;
@@ -237,7 +159,7 @@
 		font-size: 0.875rem;
 	}
 
-	.demo-notice {
+	.team-notice {
 		margin-top: 1.5rem;
 		padding: 1rem;
 		background: #f3f4f6;

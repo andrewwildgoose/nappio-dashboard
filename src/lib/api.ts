@@ -107,7 +107,7 @@ class NappioApi {
 
 	// Subscription management operations
 	async getSubscriptions(): Promise<ApiResponse<SubscriptionData[]>> {
-		return this.request<SubscriptionData[]>('/v1/admin/subscriptions');
+		return this.request<SubscriptionData[]>('/api/v1/admin/subscription-progress');
 	}
 
 	async updateSubscriptionProgress(

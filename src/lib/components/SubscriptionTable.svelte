@@ -213,7 +213,7 @@
 								<input
 									type="datetime-local"
 									value={formatDateForInput(editForm.meeting_date || null)}
-									oninput={(e) => editForm.meeting_date = formatDateFromInput(e.target.value)}
+									oninput={(e) => editForm.meeting_date = formatDateFromInput((e.target as HTMLInputElement).value)}
 									class="w-full rounded border border-gray-300 px-2 py-1 text-sm"
 								/>
 							</td>

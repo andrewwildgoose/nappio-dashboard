@@ -1,8 +1,23 @@
 <script lang="ts">
 	import Header from './Header.svelte';
 	import '../app.css';
+	import { user } from '$lib/stores/auth';
+	import { onMount } from 'svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
+
+	// Initialize the user store with session data from the server
+	onMount(() => {
+		if (data.session?.user) {
+			user.set({
+				id: data.session.user.id,
+				email: data.session.user.email,
+				email_verified: data.session.user.email_confirmed_at ? true : false
+			});
+		} else {
+			user.set(null);
+		}
+	});
 </script>
 
 <div class="app">

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { user } from '$lib/stores/auth';
+	import { enhance } from '$app/forms';
 </script>
 
 <header class="border-b border-gray-200 bg-white px-6 py-4">
@@ -10,11 +12,25 @@
 		</div>
 
 		<nav class="flex space-x-8">
-			<a href="/" class="nav-link {page.url.pathname === '/' ? 'active' : ''}"> Dashboard </a>
-			<a href="/auth" class="nav-link {page.url.pathname === '/auth' ? 'active' : ''}"> Login </a>
+			{#if $user}
+				<a href="/" class="nav-link {page.url.pathname === '/' ? 'active' : ''}"> Dashboard </a>
+			{:else}
+				<a href="/auth" class="nav-link {page.url.pathname === '/auth' ? 'active' : ''}"> Sign In </a>
+			{/if}
 		</nav>
 
-		<div class="text-sm text-gray-500">Team Portal</div>
+		<div class="flex items-center space-x-4">
+			{#if $user}
+				<span class="text-sm text-gray-600">Welcome, {$user.email}</span>
+				<form method="POST" action="/auth?/signout" use:enhance>
+					<button type="submit" class="text-sm text-red-600 hover:text-red-800 underline">
+						Sign Out
+					</button>
+				</form>
+			{:else}
+				<div class="text-sm text-gray-500">Team Portal</div>
+			{/if}
+		</div>
 	</div>
 </header>
 
