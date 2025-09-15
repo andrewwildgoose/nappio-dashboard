@@ -113,7 +113,7 @@ class NappioApi {
 	async updateSubscriptionProgress(
 		data: SubscriptionProgressUpdate
 	): Promise<ApiResponse<void>> {
-		return this.request<void>('/v1/admin/subscription-progress-update', {
+		return this.request<void>('/api/v1/admin/subscription-progress-update', {
 			method: 'POST',
 			body: JSON.stringify(data)
 		});

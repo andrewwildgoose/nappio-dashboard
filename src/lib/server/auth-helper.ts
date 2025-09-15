@@ -5,7 +5,9 @@ import { supabase } from '../supabase';
 
 export async function requireAuth(event: RequestEvent): Promise<Session> {
     const session = event.locals.session;
+    console.log('[requireAuth] session:', session);
     if (!session) {
+        console.warn('[requireAuth] No session found, redirecting to /auth');
         throw redirect(303, '/auth');
     }
     return session;
@@ -13,17 +15,20 @@ export async function requireAuth(event: RequestEvent): Promise<Session> {
 
 export async function requireUnauth(event: RequestEvent): Promise<void> {
     if (event.locals.session) {
+        console.warn('[requireUnauth] Session found, redirecting to /');
         throw redirect(303, '/');
     }
 }
 
 export async function handleServerSignOut(cookies: Cookies) {
     // Clear server-side session
+    console.log('[handleServerSignOut] Signing out user');
     await supabase.auth.signOut();
     
     // Clear auth cookies
     cookies.delete('sb-access-token', { path: '/' });
     cookies.delete('sb-refresh-token', { path: '/' });
+    console.log('[handleServerSignOut] Cleared auth cookies');
 
     return { success: true };
 }
@@ -33,7 +38,9 @@ export async function handleServerSignIn({ email, password, cookies }: {
     password: string; 
     cookies: Cookies;
 }) {
+    console.log('[handleServerSignIn] Attempting sign in for email:', email);
     if (!email || !password) {
+        console.warn('[handleServerSignIn] Missing email or password');
         return fail(400, { error: 'Missing email or password' });
     }
 
@@ -42,20 +49,24 @@ export async function handleServerSignIn({ email, password, cookies }: {
         email,
         password
     });
+    console.log('[handleServerSignIn] Auth response:', { authData, authError });
 
     if (authError) {
+        console.error('[handleServerSignIn] Auth error:', authError.message);
         return fail(400, { error: authError.message });
     }
 
     // Check if user exists in team_users table
     const { data: teamUser, error: teamError } = await supabase
         .from('team_users')
-        .select('user_id, email, role')
+        .select('user_id, role')
         .eq('user_id', authData.user.id)
         .single();
+    console.log('[handleServerSignIn] teamUser response:', { teamUser, teamError });
 
     if (teamError || !teamUser) {
         // User not found in team_users table, deny access
+        console.warn('[handleServerSignIn] User not found in team_users or error:', teamError);
         await supabase.auth.signOut();
         return fail(403, { error: 'Access denied. You are not authorized to use this dashboard.' });
     }
@@ -77,6 +88,7 @@ export async function handleServerSignIn({ email, password, cookies }: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true
     });
+    console.log('[handleServerSignIn] Set auth cookies for user:', authData.user.id);
 
     return {
         success: true,
@@ -92,8 +104,10 @@ export async function handleServerSignIn({ email, password, cookies }: {
 export async function getSessionFromCookies(cookies: Cookies): Promise<Session | null> {
     const accessToken = cookies.get('sb-access-token');
     const refreshToken = cookies.get('sb-refresh-token');
+    console.log('[getSessionFromCookies] accessToken:', accessToken, 'refreshToken:', refreshToken);
 
     if (!accessToken || !refreshToken) {
+        console.warn('[getSessionFromCookies] Missing access or refresh token');
         return null;
     }
 
@@ -102,13 +116,16 @@ export async function getSessionFromCookies(cookies: Cookies): Promise<Session |
             access_token: accessToken,
             refresh_token: refreshToken
         });
+        console.log('[getSessionFromCookies] setSession response:', { data, error });
 
         if (error || !data.session) {
+            console.warn('[getSessionFromCookies] Error or no session:', error);
             return null;
         }
 
         return data.session;
-    } catch {
+    } catch (e) {
+        console.error('[getSessionFromCookies] Exception:', e);
         return null;
     }
 }

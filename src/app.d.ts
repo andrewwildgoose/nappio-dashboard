@@ -6,6 +6,7 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
+			user: User | null;
 			supabase?: any;
 			session?: Session | null;
 			getSession(): Promise<Session | null>;

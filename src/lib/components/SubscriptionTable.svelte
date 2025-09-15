@@ -54,7 +54,7 @@
 			}
 
 			// Use real API in production, mock API for development
-			const isProduction = import.meta.env.PROD;
+			const isProduction = true;
 			let response;
 			
 			if (isProduction) {
@@ -166,6 +166,7 @@
 				<tr>
 					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
 						Customer
+						<p class="text-xs text-gray-500">subscription_id</p>
 					</th>
 					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
 						Email
@@ -181,6 +182,7 @@
 					</th>
 					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
 						Baby DOB
+						<p class="text-xs text-gray-500">(weight at start)</p>
 					</th>
 					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
 						Actions

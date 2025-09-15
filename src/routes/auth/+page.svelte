@@ -1,10 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData } from './$types';
+	import { goto } from '$app/navigation';
 
 	let { data, form }: { data: any; form?: ActionData } = $props();
 
 	let isLoading = $state(false);
+
+	// Watch for successful sign in and redirect
+	$effect(() => {
+		if (form?.success) {
+			goto('/');
+		}
+	});
 </script>
 
 <svelte:head>

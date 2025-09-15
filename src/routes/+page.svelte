@@ -13,7 +13,8 @@
 			error = null;
 
 			// Use real API in production, mock API for development
-			const isProduction = import.meta.env.PROD;
+			//TODO: REMOVE THIS LINE BEFORE DEPLOYMENT
+			const isProduction = true;
 			let response;
 			
 			if (isProduction) {
