@@ -99,7 +99,7 @@
 
 <div class="overflow-x-auto">
 	<table class="min-w-full divide-y divide-gray-200">
-		<thead class="bg-gray-50">
+		<thead class="">
 			<tr>
 				<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
 					Title
@@ -121,7 +121,7 @@
 				</th>
 			</tr>
 		</thead>
-		<tbody class="divide-y divide-gray-200 bg-white">
+		<tbody class="divide-y divide-gray-200">
 			{#each data as row (row.id)}
 				<tr class="hover:bg-gray-50">
 					{#if editingId === row.id}
@@ -172,10 +172,10 @@
 					{:else}
 						<!-- Display mode -->
 						<td class="px-6 py-4 whitespace-nowrap">
-							<div class="text-sm font-medium text-gray-900">{row.title}</div>
+							<div class="text-sm font-medium">{row.title}</div>
 						</td>
 						<td class="px-6 py-4">
-							<div class="max-w-xs truncate text-sm text-gray-900">{row.description}</div>
+							<div class="max-w-xs truncate text-sm">{row.description}</div>
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<span

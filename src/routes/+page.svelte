@@ -51,14 +51,14 @@
 
 <div class="dashboard">
 	<div class="dashboard-header">
-		<h1 class="mb-2 text-3xl font-bold text-gray-900">Nappio Subscription Dashboard</h1>
-		<p class="mb-6 text-gray-600">Manage customer subscriptions and track progress</p>
+		<h1 class="mb-2 text-3xl font-bold">Nappio Subscription Dashboard</h1>
+		<p class="mb-6">Manage customer subscriptions and track progress</p>
 
 		<div class="header-actions">
 			<button
 				onclick={loadData}
 				disabled={isLoading}
-				class="rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+				class="rounded-md px-4 py-2 font-medium text-white transition-colors border-1 border-secondary hover:bg-lightgrey hover:text-secondary disabled:opacity-50 hover:cursor-pointer"
 			>
 				{isLoading ? 'Loading...' : 'Refresh'}
 			</button>
@@ -93,27 +93,27 @@
 	<!-- Stats Cards -->
 	<div class="stats-grid">
 		<div class="stat-card">
-			<h3 class="text-lg font-semibold text-gray-900">Total Subscriptions</h3>
-			<p class="text-3xl font-bold text-blue-600">{data.length}</p>
+			<h3 class="text-lg font-semibold">Total Subscriptions</h3>
+			<p class="text-3xl font-bold text-secondary">{data.length}</p>
 		</div>
 
 		<div class="stat-card">
-			<h3 class="text-lg font-semibold text-gray-900">Active</h3>
-			<p class="text-3xl font-bold text-green-600">
+			<h3 class="text-lg font-semibold">Active</h3>
+			<p class="text-3xl font-bold text-tertiary">
 				{data.filter((item) => item.progress_status === 'active').length}
 			</p>
 		</div>
 
 		<div class="stat-card">
-			<h3 class="text-lg font-semibold text-gray-900">Pending</h3>
-			<p class="text-3xl font-bold text-yellow-600">
+			<h3 class="text-lg font-semibold">Pending</h3>
+			<p class="text-3xl font-bold text-accent2">
 				{data.filter((item) => item.progress_status === 'pending').length}
 			</p>
 		</div>
 
 		<div class="stat-card">
-			<h3 class="text-lg font-semibold text-gray-900">Meeting Scheduled</h3>
-			<p class="text-3xl font-bold text-purple-600">
+			<h3 class="text-lg font-semibold">Meeting Scheduled</h3>
+			<p class="text-3xl font-bold text-accent">
 				{data.filter((item) => item.progress_status === 'meeting_scheduled').length}
 			</p>
 		</div>
@@ -181,7 +181,7 @@
 	}
 
 	.table-container {
-		background-color: white;
+		/* background-color: white; */
 		border-radius: 0.5rem;
 		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 		overflow: hidden;
@@ -195,7 +195,6 @@
 	}
 
 	.stat-card {
-		background-color: white;
 		padding: 1.5rem;
 		border-radius: 0.5rem;
 		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);

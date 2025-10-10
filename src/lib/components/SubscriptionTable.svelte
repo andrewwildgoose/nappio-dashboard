@@ -89,20 +89,28 @@
 			month: 'short',
 			day: 'numeric',
 			hour: '2-digit',
-			minute: '2-digit'
+			minute: '2-digit',
+			timeZone: 'UTC' // Display in UTC to match database storage
 		});
 	}
 
 	function formatDateForInput(dateString: string | null): string {
 		if (!dateString) return '';
-		// Convert ISO date to datetime-local format (YYYY-MM-DDTHH:MM)
-		return new Date(dateString).toISOString().slice(0, 16);
+		// Create date in UTC and format for datetime-local input
+		const date = new Date(dateString);
+		// Get UTC components and format as local datetime-local expects
+		const year = date.getUTCFullYear();
+		const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+		const day = String(date.getUTCDate()).padStart(2, '0');
+		const hours = String(date.getUTCHours()).padStart(2, '0');
+		const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+		return `${year}-${month}-${day}T${hours}:${minutes}`;
 	}
 
 	function formatDateFromInput(inputValue: string): string | null {
 		if (!inputValue) return null;
-		// Convert datetime-local format back to ISO string
-		return new Date(inputValue).toISOString();
+		// Treat the input as UTC time
+		return new Date(inputValue + 'Z').toISOString();
 	}
 
 	function getStatusClass(status: SubscriptionStatus) {
@@ -142,11 +150,11 @@
 				type="text"
 				placeholder="Search customers, emails, or subscription IDs..."
 				bind:value={filterText}
-				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-color-theme-1 focus:outline-none focus:ring-1 focus:ring-color-theme-1"
 			/>
 			<select
 				bind:value={statusFilter}
-				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-color-theme-1 focus:outline-none focus:ring-1 focus:ring-color-theme-1"
 			>
 				<option value="all">All Status</option>
 				{#each statusOptions as status}
@@ -154,52 +162,52 @@
 				{/each}
 			</select>
 		</div>
-		<div class="text-sm text-gray-600">
+		<div class="text-sm">
 			Showing {filteredData.length} of {data.length} subscriptions
 		</div>
 	</div>
 
 	<!-- Table -->
 	<div class="overflow-x-auto">
-		<table class="min-w-full divide-y divide-gray-200">
-			<thead class="bg-gray-50">
+		<table class="min-w-full divide-y divide-border">
+			<thead class="">
 				<tr>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Customer
-						<p class="text-xs text-gray-500">subscription_id</p>
+						<p class="text-xs">subscription_id</p>
 					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Email
 					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Status
 					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Meeting Date
 					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Subscribed
 					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Baby DOB
-						<p class="text-xs text-gray-500">(weight at start)</p>
+						<p class="text-xs">(weight at start)</p>
 					</th>
-					<th class="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Actions
 					</th>
 				</tr>
 			</thead>
-			<tbody class="divide-y divide-gray-200 bg-white">
+			<tbody class="divide-y divide-border">
 				{#each filteredData as row (row.subscription_id)}
-					<tr class="hover:bg-gray-50">
+					<tr class="hover:bg-lightgrey">
 						{#if editingId === row.subscription_id}
 							<!-- Editing mode -->
 							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm font-medium text-gray-900">{row.customer_name}</div>
+								<div class="text-sm font-medium">{row.customer_name}</div>
 								<div class="text-xs text-gray-500">{row.subscription_id}</div>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-900">{row.customer_email}</div>
+								<div class="text-sm">{row.customer_email}</div>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
 								<select
@@ -219,28 +227,31 @@
 									class="w-full rounded border border-gray-300 px-2 py-1 text-sm"
 								/>
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap">
 								{formatDate(row.subscribed_at)}
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap">
 								{formatDate(row.baby_dob)}
 							</td>
-							<td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-								<button onclick={saveEdit} class="mr-3 text-green-600 hover:text-green-900">
-									Save
-								</button>
-								<button onclick={cancelEdit} class="text-gray-600 hover:text-gray-900">
-									Cancel
-								</button>
+							<td class="px-6 py-4 text-sm font-medium">
+								<div class="flex gap-2 flex-col">
+									<button onclick={saveEdit} class="rounded-md px-4 py-2 font-medium text-tertiary transition-colors border-1 border-tertiary hover:bg-lightgrey disabled:opacity-50 hover:cursor-pointer">
+										Save
+									</button>
+									<button onclick={cancelEdit} class="rounded-md px-4 py-2 font-medium text-primary transition-colors border-1 border-primary hover:bg-lightgrey disabled:opacity-50 hover:cursor-pointer">
+										Cancel
+									</button>
+								</div>
+
 							</td>
 						{:else}
 							<!-- Display mode -->
 							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm font-medium text-gray-900">{row.customer_name}</div>
+								<div class="text-sm font-medium">{row.customer_name}</div>
 								<div class="text-xs text-gray-500">{row.subscription_id}</div>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
-								<div class="text-sm text-gray-900">{row.customer_email}</div>
+								<div class="text-sm">{row.customer_email}</div>
 							</td>
 							<td class="px-6 py-4 whitespace-nowrap">
 								<span
@@ -251,13 +262,13 @@
 									{row.progress_status.replace('_', ' ').toUpperCase()}
 								</span>
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap">
 								{formatDate(row.meeting_date)}
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap">
 								{formatDate(row.subscribed_at)}
 							</td>
-							<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
+							<td class="px-6 py-4 text-sm whitespace-nowrap">
 								{formatDate(row.baby_dob)}
 								{#if row.baby_weight_at_start}
 									<div class="text-xs">({row.baby_weight_at_start}kg)</div>
@@ -266,9 +277,9 @@
 							<td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
 								<button
 									onclick={() => startEdit(row)}
-									class="text-indigo-600 hover:text-indigo-900"
+									class="rounded-md px-4 py-2 font-medium text-white transition-colors border-1 border-secondary hover:bg-lightgrey hover:text-secondary disabled:opacity-50 hover:cursor-pointer"
 								>
-									Edit
+									Update
 								</button>
 							</td>
 						{/if}
@@ -276,7 +287,7 @@
 				{/each}
 				{#if filteredData.length === 0}
 					<tr>
-						<td colspan="7" class="px-6 py-4 text-center text-gray-500">
+						<td colspan="7" class="px-6 py-4 text-center">
 							{filterText || statusFilter !== 'all' 
 								? 'No subscriptions match your filters.' 
 								: 'No subscriptions available.'}
@@ -290,7 +301,7 @@
 
 <style>
 	.subscription-table-container {
-		background-color: white;
+		/* background-color: white; */
 		border-radius: 0.5rem;
 		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 		overflow: hidden;

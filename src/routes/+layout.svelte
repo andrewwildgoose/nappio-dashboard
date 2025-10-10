@@ -37,7 +37,7 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-		background-color: #f9fafb;
+		/* background-color: #f9fafb; */
 	}
 
 	main {
@@ -55,9 +55,9 @@
 		justify-content: center;
 		align-items: center;
 		padding: 1rem;
-		background-color: white;
+		/* background-color: white; */
 		border-top: 1px solid #e5e7eb;
-		color: #6b7280;
+		/* color: #6b7280; */
 		font-size: 0.875rem;
 	}
 </style>
