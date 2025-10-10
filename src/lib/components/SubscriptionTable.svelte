@@ -13,18 +13,69 @@
 	let editForm = $state<{ status?: SubscriptionStatus; meeting_date?: string | null }>({});
 	let filterText = $state('');
 	let statusFilter = $state<SubscriptionStatus | 'all'>('all');
+	
+	// Sorting state
+	let sortColumn = $state<string | null>(null);
+	let sortDirection = $state<'asc' | 'desc'>('asc');
 
 	// Filtered data based on search and status
-	let filteredData = $derived(data.filter(row => {
-		const matchesText = filterText === '' || 
-			row.customer_name.toLowerCase().includes(filterText.toLowerCase()) ||
-			row.customer_email.toLowerCase().includes(filterText.toLowerCase()) ||
-			row.subscription_id.toLowerCase().includes(filterText.toLowerCase());
-		
-		const matchesStatus = statusFilter === 'all' || row.progress_status === statusFilter;
-		
-		return matchesText && matchesStatus;
-	}));
+	let filteredData = $derived(() => {
+		let filtered = data.filter(row => {
+			const matchesText = filterText === '' || 
+				row.customer_name.toLowerCase().includes(filterText.toLowerCase()) ||
+				row.customer_email.toLowerCase().includes(filterText.toLowerCase()) ||
+				row.subscription_id.toLowerCase().includes(filterText.toLowerCase());
+			
+			const matchesStatus = statusFilter === 'all' || row.progress_status === statusFilter;
+			
+			return matchesText && matchesStatus;
+		});
+
+		// Apply sorting
+		if (sortColumn) {
+			filtered.sort((a, b) => {
+				let aVal: any;
+				let bVal: any;
+
+				switch (sortColumn) {
+					case 'customer':
+						aVal = a.customer_name;
+						bVal = b.customer_name;
+						break;
+					case 'email':
+						aVal = a.customer_email;
+						bVal = b.customer_email;
+						break;
+					case 'status':
+						// Define status order for sorting
+						const statusOrder = ['pending', 'setup_paid', 'meeting_scheduled', 'checkout_sent', 'active', 'canceled'];
+						aVal = statusOrder.indexOf(a.progress_status);
+						bVal = statusOrder.indexOf(b.progress_status);
+						break;
+					case 'meeting_date':
+						aVal = a.meeting_date ? new Date(a.meeting_date).getTime() : 0;
+						bVal = b.meeting_date ? new Date(b.meeting_date).getTime() : 0;
+						break;
+					case 'subscribed':
+						aVal = new Date(a.subscribed_at).getTime();
+						bVal = new Date(b.subscribed_at).getTime();
+						break;
+					case 'baby_dob':
+						aVal = a.baby_dob ? new Date(a.baby_dob).getTime() : 0;
+						bVal = b.baby_dob ? new Date(b.baby_dob).getTime() : 0;
+						break;
+					default:
+						return 0;
+				}
+
+				if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+				if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+				return 0;
+			});
+		}
+
+		return filtered;
+	});
 
 	function startEdit(row: SubscriptionData) {
 		editingId = row.subscription_id;
@@ -32,6 +83,22 @@
 			status: row.progress_status,
 			meeting_date: row.meeting_date
 		};
+	}
+
+	function handleSort(column: string) {
+		if (sortColumn === column) {
+			// Toggle direction if same column
+			sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+		} else {
+			// New column, default to ascending
+			sortColumn = column;
+			sortDirection = 'asc';
+		}
+	}
+
+	function getSortIcon(column: string) {
+		if (sortColumn !== column) return '⇅';
+		return sortDirection === 'asc' ? '↑' : '↓';
 	}
 
 	function cancelEdit() {
@@ -150,11 +217,11 @@
 				type="text"
 				placeholder="Search customers, emails, or subscription IDs..."
 				bind:value={filterText}
-				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-color-theme-1 focus:outline-none focus:ring-1 focus:ring-color-theme-1"
+				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-secondary focus:outline-none focus:ring-1 focus:ring-secondary"
 			/>
 			<select
 				bind:value={statusFilter}
-				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-color-theme-1 focus:outline-none focus:ring-1 focus:ring-color-theme-1"
+				class="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-secondary focus:outline-none focus:ring-1 focus:ring-secondary"
 			>
 				<option value="all">All Status</option>
 				{#each statusOptions as status}
@@ -163,7 +230,7 @@
 			</select>
 		</div>
 		<div class="text-sm">
-			Showing {filteredData.length} of {data.length} subscriptions
+			Showing {filteredData().length} of {data.length} subscriptions
 		</div>
 	</div>
 
@@ -172,25 +239,47 @@
 		<table class="min-w-full divide-y divide-border">
 			<thead class="">
 				<tr>
-					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
-						Customer
-						<p class="text-xs">subscription_id</p>
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase cursor-pointer hover:bg-lightgrey select-none" onclick={() => handleSort('customer')}>
+						<div class="flex items-center justify-between">
+							<div>
+								Customer
+								<p class="text-xs">subscription_id</p>
+							</div>
+							<span class="text-gray-400 ml-2">{getSortIcon('customer')}</span>
+						</div>
 					</th>
-					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
-						Email
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase cursor-pointer hover:bg-lightgrey select-none" onclick={() => handleSort('email')}>
+						<div class="flex items-center justify-between">
+							<span>Email</span>
+							<span class="text-gray-400 ml-2">{getSortIcon('email')}</span>
+						</div>
 					</th>
-					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
-						Status
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase cursor-pointer hover:bg-lightgrey select-none" onclick={() => handleSort('status')}>
+						<div class="flex items-center justify-between">
+							<span>Status</span>
+							<span class="text-gray-400 ml-2">{getSortIcon('status')}</span>
+						</div>
 					</th>
-					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
-						Meeting Date
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase cursor-pointer hover:bg-lightgrey select-none" onclick={() => handleSort('meeting_date')}>
+						<div class="flex items-center justify-between">
+							<span>Meeting Date</span>
+							<span class="text-gray-400 ml-2">{getSortIcon('meeting_date')}</span>
+						</div>
 					</th>
-					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
-						Subscribed
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase cursor-pointer hover:bg-lightgrey select-none" onclick={() => handleSort('subscribed')}>
+						<div class="flex items-center justify-between">
+							<span>Subscribed</span>
+							<span class="text-gray-400 ml-2">{getSortIcon('subscribed')}</span>
+						</div>
 					</th>
-					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
-						Baby DOB
-						<p class="text-xs">(weight at start)</p>
+					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase cursor-pointer hover:bg-lightgrey select-none" onclick={() => handleSort('baby_dob')}>
+						<div class="flex items-center justify-between">
+							<div>
+								Baby DOB
+								<p class="text-xs">(weight at start)</p>
+							</div>
+							<span class="text-gray-400 ml-2">{getSortIcon('baby_dob')}</span>
+						</div>
 					</th>
 					<th class="px-6 py-3 text-left text-s font-bold tracking-wider uppercase">
 						Actions
@@ -198,7 +287,7 @@
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-border">
-				{#each filteredData as row (row.subscription_id)}
+				{#each filteredData() as row (row.subscription_id)}
 					<tr class="hover:bg-lightgrey">
 						{#if editingId === row.subscription_id}
 							<!-- Editing mode -->

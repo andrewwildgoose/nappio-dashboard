@@ -23,8 +23,8 @@
 <div class="auth-container">
 	<div class="auth-card">
 		<div class="auth-header">
-			<h1 class="mb-2 text-3xl font-bold text-gray-900">Welcome Back</h1>
-			<p class="text-gray-600">Sign in to your Nappio admin dashboard</p>
+			<h1 class="mb-2 text-3xl font-bold text-color-text">Welcome Back</h1>
+			<p class="text-color-text">Sign in to your Nappio admin dashboard</p>
 		</div>
 
 		<form method="POST" action="?/signin" use:enhance={() => {
@@ -94,7 +94,7 @@
 	.auth-card {
 		width: 100%;
 		max-width: 400px;
-		background: white;
+		border: 1px solid #f4f3ed;
 		border-radius: 0.75rem;
 		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 		padding: 2rem;
@@ -119,7 +119,7 @@
 
 	.form-label {
 		font-weight: 600;
-		color: #374151;
+		color: #f4f3ed;
 		font-size: 0.875rem;
 	}
 
@@ -133,13 +133,13 @@
 
 	.form-input:focus {
 		outline: none;
-		border-color: #2563eb;
+		border-color: #7cc4a7;
 		box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 	}
 
 	.auth-button {
-		background: #2563eb;
-		color: white;
+		background: #ffe670;
+		color: #262625;
 		padding: 0.75rem;
 		border: none;
 		border-radius: 0.5rem;
@@ -150,17 +150,17 @@
 	}
 
 	.auth-button:hover:not(:disabled) {
-		background: #1d4ed8;
+		background: #fde04d;
 	}
 
 	.auth-button:disabled {
-		background: #93c5fd;
+		background: #fdf0ab;
 		cursor: not-allowed;
 	}
 
 	.error-message {
-		background: #fee2e2;
-		color: #dc2626;
+		background: #f7b18a;
+		color: #262625;
 		padding: 0.75rem;
 		border-radius: 0.5rem;
 		text-align: center;
