@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type SubscriptionData, type SubscriptionStatus, mockApi } from '$lib/api';
+	import { type SubscriptionData, type SubscriptionStatus, type SubscriptionProgressUpdate, mockApi } from '$lib/api';
 
 	let { 
 		data = [], 
@@ -13,6 +13,11 @@
 	let editForm = $state<{ status?: SubscriptionStatus; meeting_date?: string | null }>({});
 	let filterText = $state('');
 	let statusFilter = $state<SubscriptionStatus | 'all'>('all');
+	
+	// Confirmation modal state
+	let showConfirmationModal = $state(false);
+	let confirmationData = $state<SubscriptionData | null>(null);
+	let pendingUpdate = $state<SubscriptionProgressUpdate | null>(null);
 	
 	// Sorting state
 	let sortColumn = $state<string | null>(null);
@@ -110,7 +115,13 @@
 		try {
 			if (!editingId || !editForm) return;
 
-			const update: any = { subscription_id: editingId };
+			// Find the current subscription data
+			const currentSubscription = data.find(row => row.subscription_id === editingId);
+			if (!currentSubscription) return;
+
+			const update: SubscriptionProgressUpdate = { 
+				subscription_id: editingId 
+			};
 			
 			if (editForm.status !== undefined) {
 				update.status = editForm.status;
@@ -120,6 +131,35 @@
 				update.meeting_date = editForm.meeting_date;
 			}
 
+			// Create the preview data with updated values
+			const previewData: SubscriptionData = {
+				...currentSubscription,
+				progress_status: editForm.status || currentSubscription.progress_status,
+				meeting_date: editForm.meeting_date !== undefined ? editForm.meeting_date : currentSubscription.meeting_date
+			};
+
+			// Store the update and preview data, then show confirmation modal
+			pendingUpdate = update;
+			confirmationData = previewData;
+			showConfirmationModal = true;
+
+		} catch (error) {
+			console.error('Error preparing subscription update:', error);
+			alert('Failed to prepare update: ' + (error instanceof Error ? error.message : 'Unknown error'));
+		}
+	}
+
+	async function confirmSave() {
+		try {
+			if (!pendingUpdate) return;
+
+			// Extract the actual object from the reactive state
+			const updateData: SubscriptionProgressUpdate = {
+				subscription_id: pendingUpdate.subscription_id,
+				...(pendingUpdate.status && { status: pendingUpdate.status }),
+				...(pendingUpdate.meeting_date !== undefined && { meeting_date: pendingUpdate.meeting_date })
+			};
+
 			// Use real API in production, mock API for development
 			const isProduction = true;
 			let response;
@@ -127,16 +167,21 @@
 			if (isProduction) {
 				// Import real API for production
 				const { api } = await import('$lib/api');
-				response = await api.updateSubscriptionProgress(update);
+				
+				response = await api.updateSubscriptionProgress(updateData);
 			} else {
 				// Use mock API for development
-				response = await mockApi.updateSubscriptionProgress(update);
+				response = await mockApi.updateSubscriptionProgress(updateData);
 			}
 
 			if (!response.success) {
 				throw new Error(response.error || 'Failed to update subscription');
 			}
 
+			// Close modal and reset state
+			showConfirmationModal = false;
+			confirmationData = null;
+			pendingUpdate = null;
 			editingId = null;
 			editForm = {};
 
@@ -147,6 +192,14 @@
 			console.error('Error updating subscription:', error);
 			alert('Failed to update subscription: ' + (error instanceof Error ? error.message : 'Unknown error'));
 		}
+	}
+
+	function cancelConfirmation() {
+		// Return to edit mode - just close the modal
+		showConfirmationModal = false;
+		confirmationData = null;
+		pendingUpdate = null;
+		// Keep editingId and editForm so user returns to edit view
 	}
 
 	function formatDate(dateString: string | null) {
@@ -374,7 +427,7 @@
 						{/if}
 					</tr>
 				{/each}
-				{#if filteredData.length === 0}
+				{#if filteredData().length === 0}
 					<tr>
 						<td colspan="7" class="px-6 py-4 text-center">
 							{filterText || statusFilter !== 'all' 
@@ -388,12 +441,233 @@
 	</div>
 </div>
 
+<!-- Confirmation Modal -->
+{#if showConfirmationModal && confirmationData}
+	<div 
+		class="modal-overlay" 
+		onclick={(e) => e.target === e.currentTarget && cancelConfirmation()}
+		onkeydown={(e) => e.key === 'Escape' && cancelConfirmation()}
+		role="dialog" 
+		aria-modal="true"
+		aria-labelledby="modal-title"
+		tabindex="-1"
+	>
+		<div class="modal-content" role="document">
+			<div class="modal-header">
+				<h3 id="modal-title" class="text-lg font-semibold text-color-text">Confirm Subscription Update</h3>
+				<button onclick={cancelConfirmation} class="modal-close-button">
+					<span class="sr-only">Close</span>
+					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+			
+			<div class="modal-body">
+				<p class="text-sm text-color-text mb-4">Please review the changes below and confirm they are correct. Confirming & saving these changes may trigger emails to the customer.</p>
+				
+				<div class="confirmation-details">
+					<div class="detail-group">
+						<div class="detail-label">Customer:</div>
+						<span class="detail-value">{confirmationData.customer_name}</span>
+					</div>
+					
+					<div class="detail-group">
+						<div class="detail-label">Email:</div>
+						<span class="detail-value">{confirmationData.customer_email}</span>
+					</div>
+					
+					<div class="detail-group">
+						<div class="detail-label">Subscription ID:</div>
+						<span class="detail-value">{confirmationData.subscription_id}</span>
+					</div>
+					
+					<div class="detail-group">
+						<div class="detail-label">Status:</div>
+						<span class="detail-value status-badge">
+							{confirmationData.progress_status.replace('_', ' ').toUpperCase()}
+						</span>
+					</div>
+					
+					<div class="detail-group">
+						<div class="detail-label">Meeting Date:</div>
+						<span class="detail-value">{formatDate(confirmationData.meeting_date)}</span>
+					</div>
+					
+					<div class="detail-group">
+						<div class="detail-label">Subscribed:</div>
+						<span class="detail-value">{formatDate(confirmationData.subscribed_at)}</span>
+					</div>
+					
+					<div class="detail-group">
+						<div class="detail-label">Baby DOB:</div>
+						<span class="detail-value">
+							{formatDate(confirmationData.baby_dob)}
+							{#if confirmationData.baby_weight_at_start}
+								({confirmationData.baby_weight_at_start}kg)
+							{/if}
+						</span>
+					</div>
+				</div>
+			</div>
+			
+			<div class="modal-footer">
+				<button onclick={cancelConfirmation} class="btn-cancel">
+					Cancel & Continue Editing
+				</button>
+				<button onclick={confirmSave} class="btn-confirm">
+					Confirm & Save Changes
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <style>
 	.subscription-table-container {
-		/* background-color: white; */
 		border-radius: 0.5rem;
 		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 		overflow: hidden;
 		padding: 1rem;
+	}
+
+	/* Modal Styles */
+	.modal-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 10;
+		padding: 1rem;
+	}
+
+	.modal-content {
+		background-color: #262625;
+		border: 1px solid #f7b18a;
+		border-radius: 0.75rem;
+		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+		max-width: 32rem;
+		width: 100%;
+		max-height: 90vh;
+		overflow-y: auto;
+		z-index: 1000;
+	}
+
+	.modal-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1.5rem 1.5rem 1rem 1.5rem;
+		border-bottom: 1px solid #f7b18a;
+	}
+
+	.modal-close-button {
+		color: #6b7280;
+		background: none;
+		border: 1px solid #6b7280;
+		cursor: pointer;
+		padding: 0.25rem;
+		border-radius: 0.25rem;
+	}
+
+	.modal-close-button:hover {
+		background-color: #333132;
+		color: #f7b18a;
+		border: 1px solid #f7b18a;
+	}
+
+	.modal-body {
+		padding: 1.5rem;
+	}
+
+	.confirmation-details {
+		display: grid;
+		gap: 1rem;
+	}
+
+	.detail-group {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 0.75rem;
+		align-items: center;
+	}
+
+	.detail-label {
+		font-weight: 600;
+		color: #7cc4a7;
+		font-size: 0.875rem;
+		min-width: 120px;
+	}
+
+	.detail-value {
+		color:  #f4f3ed;
+		font-size: 0.875rem;
+	}
+
+	.status-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25rem 0.75rem;
+		border-radius: 9999px;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+	}
+
+	.modal-footer {
+		display: flex;
+		gap: 0.75rem;
+		justify-content: flex-end;
+		padding: 1rem 1.5rem 1.5rem 1.5rem;
+		border-top: 1px solid #f7b18a;
+		border-bottom-left-radius: 0.75rem;
+		border-bottom-right-radius: 0.75rem;
+	}
+
+	.btn-cancel {
+		padding: 0.5rem 1rem;
+		border: 1px solid #f7b18a;
+		color: #f7b18a;
+		border-radius: 0.375rem;
+		font-weight: 500;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-cancel:hover {
+		background-color: #333132;
+	}
+
+	.btn-confirm {
+		padding: 0.5rem 1rem;
+		border: 1px solid #7cc4a7;
+		border-radius: 0.375rem;
+		color: #7cc4a7;
+		font-weight: 500;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-confirm:hover {
+		background-color: #333132;
+	}
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 </style>

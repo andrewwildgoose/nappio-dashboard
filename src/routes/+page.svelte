@@ -81,7 +81,7 @@
 		{#if isLoading}
 			<div class="loading-state">
 				<div class="spinner"></div>
-				<p class="mt-4 text-gray-600">Loading subscription data...</p>
+				<p class="mt-4 text-color-text">Loading subscription data...</p>
 			</div>
 		{:else}
 			<div class="table-container">
@@ -157,7 +157,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 4rem 2rem;
-		background-color: white;
+		border: 1px solid #f4f3ed;
 		border-radius: 0.5rem;
 		box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 	}
@@ -165,8 +165,8 @@
 	.spinner {
 		width: 2rem;
 		height: 2rem;
-		border: 3px solid #e5e7eb;
-		border-top: 3px solid #2563eb;
+		border: 3px solid #aedbd9;
+		border-top: 3px solid #ffe670;
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
