@@ -1,24 +1,24 @@
 <script lang="ts">
-	import Header from '../lib/components/Header.svelte';
 	import '../app.css';
-	import { user } from '$lib/stores/auth';
+	import { invalidate } from '$app/navigation';
 	import { onMount } from 'svelte';
-
-	let { children, data } = $props();
-
-	// Initialize the user store with session data from the server
+	let { data, children } = $props();
+	let { session, supabase } = $derived(data);
+	import Header from '$lib/components/Header.svelte';
 	onMount(() => {
-		if (data.session?.user) {
-			user.set({
-				id: data.session.user.id,
-				email: data.session.user.email,
-				email_verified: data.session.user.email_confirmed_at ? true : false
-			});
-		} else {
-			user.set(null);
-		}
-	});
+		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
+			if (newSession?.expires_at !== session?.expires_at) {
+				invalidate('supabase:auth')
+			}
+		})
+		return () => data.subscription.unsubscribe()
+	})
 </script>
+
+<svelte:head>
+	<title>Nappio</title>
+	<meta name="description" content="Cloth nappy service" />
+</svelte:head>
 
 <div class="app">
 	<Header />

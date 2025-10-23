@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { user } from '$lib/stores/auth';
 	import { enhance } from '$app/forms';
+	import { invalidate } from '$app/navigation';
+	let user = $derived(page.data.user);
+
 </script>
 
 <header class="px-3 py-3">

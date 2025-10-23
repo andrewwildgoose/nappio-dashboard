@@ -1,7 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
-import type { Cookies, RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent } from '@sveltejs/kit';
 import type { Session } from '@supabase/supabase-js';
-import { supabase } from '../supabase';
 
 export async function requireAuth(event: RequestEvent): Promise<Session> {
     const session = event.locals.session;
@@ -20,24 +19,19 @@ export async function requireUnauth(event: RequestEvent): Promise<void> {
     }
 }
 
-export async function handleServerSignOut(cookies: Cookies) {
-    // Clear server-side session
-    console.log('[handleServerSignOut] Signing out user');
-    await supabase.auth.signOut();
-    
-    // Clear auth cookies
-    cookies.delete('sb-access-token', { path: '/' });
-    cookies.delete('sb-refresh-token', { path: '/' });
-    console.log('[handleServerSignOut] Cleared auth cookies');
-
+export async function handleServerSignOut(event: RequestEvent) {
+    // Supabase SSR handles cookies automatically
+    const { error } = await event.locals.supabase.auth.signOut();
+    if (error) {
+        console.error('[handleServerSignOut] Error signing out:', error);
+    }
+    // Clear the session from locals
+    event.locals.session = null;
+    event.locals.user = null;
     return { success: true };
 }
 
-export async function handleServerSignIn({ email, password, cookies }: { 
-    email: string; 
-    password: string; 
-    cookies: Cookies;
-}) {
+export async function handleServerSignIn(event: RequestEvent, email: string, password: string) {
     console.log('[handleServerSignIn] Attempting sign in for email:', email);
     if (!email || !password) {
         console.warn('[handleServerSignIn] Missing email or password');
@@ -45,7 +39,7 @@ export async function handleServerSignIn({ email, password, cookies }: {
     }
 
     // First authenticate with Supabase
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    const { data: authData, error: authError } = await event.locals.supabase.auth.signInWithPassword({
         email,
         password
     });
@@ -57,7 +51,7 @@ export async function handleServerSignIn({ email, password, cookies }: {
     }
 
     // Check if user exists in team_users table
-    const { data: teamUser, error: teamError } = await supabase
+    const { data: teamUser, error: teamError } = await event.locals.supabase
         .from('team_users')
         .select('user_id, role')
         .eq('user_id', authData.user.id)
@@ -67,28 +61,11 @@ export async function handleServerSignIn({ email, password, cookies }: {
     if (teamError || !teamUser) {
         // User not found in team_users table, deny access
         console.warn('[handleServerSignIn] User not found in team_users or error:', teamError);
-        await supabase.auth.signOut();
+        await event.locals.supabase.auth.signOut();
         return fail(403, { error: 'Access denied. You are not authorized to use this dashboard.' });
     }
 
-    // Set auth cookies
-    const { access_token, refresh_token } = authData.session;
-    cookies.set('sb-access-token', access_token, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true
-    });
-
-    cookies.set('sb-refresh-token', refresh_token, {
-        path: '/',
-        maxAge: 60 * 60 * 24 * 7,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true
-    });
-    console.log('[handleServerSignIn] Set auth cookies for user:', authData.user.id);
+    console.log('[handleServerSignIn] Successfully authenticated user:', authData.user.id);
 
     return {
         success: true,
@@ -101,31 +78,19 @@ export async function handleServerSignIn({ email, password, cookies }: {
     };
 }
 
-export async function getSessionFromCookies(cookies: Cookies): Promise<Session | null> {
-    const accessToken = cookies.get('sb-access-token');
-    const refreshToken = cookies.get('sb-refresh-token');
-    console.log('[getSessionFromCookies] accessToken:', accessToken, 'refreshToken:', refreshToken);
-
-    if (!accessToken || !refreshToken) {
-        console.warn('[getSessionFromCookies] Missing access or refresh token');
-        return null;
+// Validate user is in team_users table
+export async function validateTeamUser(event: RequestEvent, userId: string): Promise<boolean> {
+    const { data: teamUser, error } = await event.locals.supabase
+        .from('team_users')
+        .select('user_id, role')
+        .eq('user_id', userId)
+        .single();
+    
+    if (error || !teamUser) {
+        console.warn('[validateTeamUser] User not found in team_users:', userId, error);
+        return false;
     }
-
-    try {
-        const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-        });
-        console.log('[getSessionFromCookies] setSession response:', { data, error });
-
-        if (error || !data.session) {
-            console.warn('[getSessionFromCookies] Error or no session:', error);
-            return null;
-        }
-
-        return data.session;
-    } catch (e) {
-        console.error('[getSessionFromCookies] Exception:', e);
-        return null;
-    }
+    
+    console.log('[validateTeamUser] User validated:', userId);
+    return true;
 }

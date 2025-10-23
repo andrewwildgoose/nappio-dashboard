@@ -1,10 +1,10 @@
 import type { LayoutServerLoad } from './$types';
-import { getSessionFromCookies } from '$lib/server/auth-helper';
 
-export const load: LayoutServerLoad = async ({ cookies }) => {
-    const session = await getSessionFromCookies(cookies);
-    
+export const load: LayoutServerLoad = async ({ locals: { safeGetSession }, cookies }) => {
+    const { session, user } = await safeGetSession();
     return {
-        session
+        session,
+        user,
+        cookies: cookies.getAll().map(({ name, value }) => ({ name, value }))
     };
 };

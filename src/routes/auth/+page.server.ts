@@ -8,12 +8,12 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-    signin: async ({ request, cookies }) => {
-        const data = await request.formData();
+    signin: async (event) => {
+        const data = await event.request.formData();
         const email = data.get('email') as string;
         const password = data.get('password') as string;
 
-        const result = await handleServerSignIn({ email, password, cookies });
+        const result = await handleServerSignIn(event, email, password);
         
         if (result && 'success' in result && result.success) {
             throw redirect(303, '/');
@@ -22,8 +22,9 @@ export const actions: Actions = {
         return result;
     },
     
-    signout: async ({ cookies }) => {
-        await handleServerSignOut(cookies);
+    signout: async (event) => {
+        await handleServerSignOut(event);
+        // After signing out, redirect to auth page
         throw redirect(303, '/auth');
     }
 };
