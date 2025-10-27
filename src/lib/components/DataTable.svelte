@@ -1,13 +1,7 @@
 <script lang="ts">
-	interface DataRow {
-		id: number;
-		title: string;
-		description: string;
-		status: string;
-		assigned_to: string;
-		created_at: string;
-		updated_at: string;
-	}
+	import type { TeamDataItem } from '$lib/types/api';
+	
+	interface DataRow extends TeamDataItem {}
 
 	let { data = [], onDataUpdated }: { data: DataRow[]; onDataUpdated?: () => void } = $props();
 

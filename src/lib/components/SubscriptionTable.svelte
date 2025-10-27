@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { type SubscriptionData, type SubscriptionStatus, type SubscriptionProgressUpdate, mockApi } from '$lib/api';
+	import { mockApi } from '$lib/api';
+	import type { SubscriptionData, SubscriptionStatus, SubscriptionProgressUpdate } from '$lib/types/api';
 
 	let { 
 		data = [], 
@@ -166,9 +167,10 @@
 			
 			if (isProduction) {
 				// Import real API for production
-				const { api } = await import('$lib/api');
+				const { clientApi } = await import('$lib/client/api');
 				
-				response = await api.updateSubscriptionProgress(updateData);
+				await clientApi.updateSubscriptionProgress(updateData);
+				response = { success: true };
 			} else {
 				// Use mock API for development
 				response = await mockApi.updateSubscriptionProgress(updateData);
