@@ -1,3 +1,6 @@
+
+import { FASTAPI_BASE_URL } from '$env/static/private';
+
 // Types for API responses
 export interface TeamDataItem {
 	id: number;
@@ -45,8 +48,7 @@ class NappioApi {
 	private baseUrl: string;
 
 	constructor() {
-		// Use environment variable or fallback to localhost
-		this.baseUrl = import.meta.env.FASTAPI_BASE_URL || 'http://localhost:8000';
+		this.baseUrl = FASTAPI_BASE_URL;
 	}
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
