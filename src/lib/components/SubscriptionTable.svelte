@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type SubscriptionData, type SubscriptionStatus, type SubscriptionProgressUpdate, mockApi } from '$lib/api';
+	import { type SubscriptionData, type SubscriptionStatus, type SubscriptionProgressUpdate } from '$lib/api';
 	import {PUBLIC_ACTION_STATUSES} from '$env/static/public';
 
 	let { 
@@ -162,18 +162,13 @@
 			};
 
 			// Use real API in production, mock API for development
-			const isProduction = true;
+
 			let response;
 			
-			if (isProduction) {
-				// Import real API for production
-				const { api } = await import('$lib/api');
-				
-				response = await api.updateSubscriptionProgress(updateData);
-			} else {
-				// Use mock API for development
-				response = await mockApi.updateSubscriptionProgress(updateData);
-			}
+			// Import API for production
+			const { api } = await import('$lib/api');
+			
+			response = await api.updateSubscriptionProgress(updateData);
 
 			if (!response.success) {
 				throw new Error(response.error || 'Failed to update subscription');
