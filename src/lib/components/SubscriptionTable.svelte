@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { type SubscriptionData, type SubscriptionStatus, type SubscriptionProgressUpdate, mockApi } from '$lib/api';
+	import {PUBLIC_ACTION_STATUSES} from '$env/static/public';
 
 	let { 
 		data = [], 
@@ -417,12 +418,16 @@
 								{/if}
 							</td>
 							<td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
+								{#if PUBLIC_ACTION_STATUSES.split(',').includes(row.progress_status)}
 								<button
 									onclick={() => startEdit(row)}
 									class="rounded-md px-4 py-2 font-medium text-white transition-colors border-1 border-secondary hover:bg-lightgrey hover:text-secondary disabled:opacity-50 hover:cursor-pointer"
 								>
 									Update
 								</button>
+								{:else}
+								<span class="text-gray-400">N/A</span>
+								{/if}
 							</td>
 						{/if}
 					</tr>
