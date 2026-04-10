@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SubscriptionTable from '$lib/components/SubscriptionTable.svelte';
 	import { onMount } from 'svelte';
-	import { type SubscriptionData } from '$lib/api';
+	import { type SubscriptionData, type ApiResponse } from '$lib/api';
 
 	let data = $state<SubscriptionData[]>([]);
 	let isLoading = $state(true);
@@ -11,12 +11,9 @@
 		try {
 			isLoading = true;
 			error = null;
-			let response;
-			
-			// Import real API for production
-			const { api } = await import('$lib/api');
-			response = await api.getSubscriptions();
 
+			const res = await fetch('/api/subscriptions');
+			const response: ApiResponse<SubscriptionData[]> = await res.json();
 
 			if (response.success && response.data) {
 				data = response.data;

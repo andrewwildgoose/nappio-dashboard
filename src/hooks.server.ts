@@ -103,6 +103,12 @@ const authGuard: Handle = async ({ event, resolve }) => {
 
         // Redirect to auth if not authenticated and trying to access protected routes
         if (!event.locals.session && event.url.pathname !== '/auth' && !event.url.pathname.startsWith('/auth')) {
+            if (event.url.pathname.startsWith('/api/')) {
+                return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+                    status: 401,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
             redirect(303, '/auth')
         }
 
