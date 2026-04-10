@@ -46,7 +46,7 @@ class NappioApi {
 
 	constructor() {
 		// Use environment variable or fallback to localhost
-		this.baseUrl = import.meta.env.VITE_FASTAPI_BASE_URL || 'http://localhost:8000';
+		this.baseUrl = import.meta.env.FASTAPI_BASE_URL;
 	}
 
 	private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
