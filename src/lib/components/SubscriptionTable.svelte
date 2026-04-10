@@ -165,10 +165,13 @@
 
 			let response;
 			
-			// Import API for production
-			const { api } = await import('$lib/api');
-			
-			response = await api.updateSubscriptionProgress(updateData);
+			// Call the server-side API route to proxy to FastAPI
+			const res = await fetch('/api/subscriptions/update', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(updateData)
+			});
+			response = await res.json();
 
 			if (!response.success) {
 				throw new Error(response.error || 'Failed to update subscription');
