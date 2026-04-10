@@ -1,3 +1,5 @@
+import { FASTAPI_BASE_URL } from '$env/static/private'
+
 // Types for API responses
 export interface TeamDataItem {
 	id: number;
