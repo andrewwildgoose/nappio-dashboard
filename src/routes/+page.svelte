@@ -1,7 +1,8 @@
 <script lang="ts">
 	import SubscriptionTable from '$lib/components/SubscriptionTable.svelte';
 	import { onMount } from 'svelte';
-	import { type SubscriptionData, type ApiResponse } from '$lib/api';
+	import type { SubscriptionData } from '$lib/types/api';
+	import { clientApi } from '$lib/client/api';
 
 	let data = $state<SubscriptionData[]>([]);
 	let isLoading = $state(true);
@@ -12,14 +13,7 @@
 			isLoading = true;
 			error = null;
 
-			const res = await fetch('/api/subscriptions');
-			const response: ApiResponse<SubscriptionData[]> = await res.json();
-
-			if (response.success && response.data) {
-				data = response.data;
-			} else {
-				throw new Error(response.error || 'Failed to load subscription data');
-			}
+			data = await clientApi.getSubscriptions();
 		} catch (err) {
 			console.error('Error loading subscriptions:', err);
 			error = err instanceof Error ? err.message : 'Unknown error occurred';

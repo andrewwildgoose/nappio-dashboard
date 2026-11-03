@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { type SubscriptionData, type SubscriptionStatus, type SubscriptionProgressUpdate } from '$lib/api';
+	import type { SubscriptionData, SubscriptionStatus, SubscriptionProgressUpdate } from '$lib/types/api';
+	import { clientApi } from '$lib/client/api';
 	import {PUBLIC_ACTION_STATUSES} from '$env/static/public';
 
 	let { 
@@ -161,21 +162,7 @@
 				...(pendingUpdate.meeting_date !== undefined && { meeting_date: pendingUpdate.meeting_date })
 			};
 
-			// Use real API in production, mock API for development
-
-			let response;
-			
-			// Call the server-side API route to proxy to FastAPI
-			const res = await fetch('/api/subscriptions/update', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(updateData)
-			});
-			response = await res.json();
-
-			if (!response.success) {
-				throw new Error(response.error || 'Failed to update subscription');
-			}
+			await clientApi.updateSubscriptionProgress(updateData);
 
 			// Close modal and reset state
 			showConfirmationModal = false;

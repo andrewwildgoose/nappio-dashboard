@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { api } from '$lib/server/api';
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 import type { TeamDataItem } from '$lib/types/api';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {

@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { api } from '$lib/server/api';
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	// Ensure user is authenticated

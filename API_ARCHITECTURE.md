@@ -44,9 +44,8 @@ src/
 │   │   └── api.ts                    # Shared TypeScript types
 │   ├── server/
 │   │   └── api.ts                    # Server-only API (uses private env vars)
-│   ├── client/
-│   │   └── api.ts                    # Client-safe API (calls SvelteKit routes)
-│   └── api.ts                        # Mock data for development only
+│   └── client/
+│       └── api.ts                    # Client-safe API (calls SvelteKit routes)
 ├── routes/
 │   └── api/                          # SvelteKit API routes (proxy layer)
 │       ├── subscriptions/
@@ -146,7 +145,7 @@ async getNewData(): Promise<ApiResponse<NewType[]>> {
 ```typescript
 import { json, error } from '@sveltejs/kit';
 import { api } from '$lib/server/api';
-import type { RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	if (!locals.session) {
@@ -181,29 +180,6 @@ export interface NewType {
 }
 ```
 
-## Development vs Production
-
-### Mock Data
-For development and testing, use the mock API from `$lib/api`:
-
-```typescript
-import { mockApi } from '$lib/api';
-
-const response = await mockApi.getSubscriptions();
-if (response.success) {
-	// Use response.data
-}
-```
-
-### Production API
-In production, components should use `clientApi`:
-
-```typescript
-import { clientApi } from '$lib/client/api';
-
-const subscriptions = await clientApi.getSubscriptions();
-```
-
 ## Environment Variables
 
 Required in `.env`:
@@ -220,8 +196,7 @@ This variable is only accessible server-side and never exposed to the client.
 2. **Authentication** - Centralized session checks in SvelteKit routes
 3. **Type Safety** - Same types used everywhere
 4. **Flexibility** - Easy to add caching, rate limiting, or logging in SvelteKit layer
-5. **Testing** - Mock API available for development
-6. **Error Handling** - Consistent error responses across all endpoints
+5. **Error Handling** - Consistent error responses across all endpoints
 
 ## Common Patterns
 
