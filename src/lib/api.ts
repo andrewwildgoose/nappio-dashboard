@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { FASTAPI_BASE_URL } from '$env/static/private'
 
 // Types for API responses
@@ -10,9 +11,18 @@ export interface TeamDataItem {
 	created_at: string;
 	updated_at: string;
 }
+=======
+// This file contains mock data for development/testing only
+// For production API calls:
+// - Server-side: import from '$lib/server/api'
+// - Client-side: import from '$lib/client/api'
+// - Types: import from '$lib/types/api'
+>>>>>>> de5b036529f70d18a561fc049a43f4c9aa05088e
 
-export type SubscriptionStatus = 'pending' | 'setup_paid' | 'meeting_scheduled' | 'checkout_sent' | 'active' | 'canceled';
+// Re-export types for convenience
+export type { TeamDataItem, SubscriptionStatus, SubscriptionData, SubscriptionProgressUpdate, ApiResponse } from '$lib/types/api';
 
+<<<<<<< HEAD
 export interface SubscriptionData {
 	subscription_id: string;
 	user_id: string;
@@ -136,6 +146,9 @@ class NappioApi {
 
 // Export singleton instance
 export const api = new NappioApi();
+=======
+import type { TeamDataItem, SubscriptionData, SubscriptionProgressUpdate, ApiResponse } from '$lib/types/api';
+>>>>>>> de5b036529f70d18a561fc049a43f4c9aa05088e
 
 // // Mock data for development/demo purposes
 // export const mockTeamData: TeamDataItem[] = [

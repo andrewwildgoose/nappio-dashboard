@@ -1,7 +1,12 @@
 <script lang="ts">
 	import SubscriptionTable from '$lib/components/SubscriptionTable.svelte';
 	import { onMount } from 'svelte';
+<<<<<<< HEAD
 	import { type SubscriptionData } from '$lib/api';
+=======
+	import { mockApi } from '$lib/api';
+	import type { SubscriptionData } from '$lib/types/api';
+>>>>>>> de5b036529f70d18a561fc049a43f4c9aa05088e
 
 	let data = $state<SubscriptionData[]>([]);
 	let isLoading = $state(true);
@@ -11,6 +16,7 @@
 		try {
 			isLoading = true;
 			error = null;
+<<<<<<< HEAD
 			let response;
 			
 			// Import real API for production
@@ -22,6 +28,26 @@
 				data = response.data;
 			} else {
 				throw new Error(response.error || 'Failed to load subscription data');
+=======
+
+			// Use real API in production, mock API for development
+			//TODO: REMOVE THIS LINE BEFORE DEPLOYMENT
+			const isProduction = true;
+			
+			if (isProduction) {
+				// Import real API for production
+				const { clientApi } = await import('$lib/client/api');
+				const subscriptions = await clientApi.getSubscriptions();
+				data = subscriptions;
+			} else {
+				// Use mock API for development
+				const response = await mockApi.getSubscriptions();
+				if (response.success && response.data) {
+					data = response.data;
+				} else {
+					throw new Error(response.error || 'Failed to load data');
+				}
+>>>>>>> de5b036529f70d18a561fc049a43f4c9aa05088e
 			}
 		} catch (err) {
 			console.error('Error loading subscriptions:', err);
