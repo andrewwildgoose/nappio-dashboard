@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
-	import { invalidate } from '$app/navigation';
 	let user = $derived(page.data.user);
 
 </script>
@@ -19,10 +18,9 @@
 		</div>
 
 		<nav class="flex flex-1 space-x-8 justify-center text-colour-text">
-			{#if user}
-				<a href="/" class="nav-link px-6 py-3 {page.url.pathname === '/' ? 'active' : ''}"> Dashboard </a>
-			{:else}
-				<a href="/auth" class="nav-link px-6 py-3{page.url.pathname === '/auth' ? 'active' : ''}"> Sign In </a>
+			<!-- Page navigation lives in the sidebar ($lib/components/layout/Sidebar.svelte) -->
+			{#if !user}
+				<a href="/auth" class="nav-link px-6 py-3 {page.url.pathname === '/auth' ? 'active' : ''}"> Sign In </a>
 			{/if}
 		</nav>
 

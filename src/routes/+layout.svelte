@@ -4,7 +4,7 @@
 	import { onMount } from 'svelte';
 	let { data, children } = $props();
 	let { session, supabase } = $derived(data);
-	import Header from '$lib/components/Header.svelte';
+	import Header from '$lib/components/layout/Header.svelte';
 	onMount(() => {
 		const { data } = supabase.auth.onAuthStateChange((_, newSession) => {
 			if (newSession?.expires_at !== session?.expires_at) {
@@ -28,7 +28,7 @@
 	</main>
 
 	<footer>
-		<p>© 2024 Nappio - Internal Team Dashboard</p>
+		<p>© {new Date().getFullYear()} Nappio - Internal Team Dashboard</p>
 	</footer>
 </div>
 

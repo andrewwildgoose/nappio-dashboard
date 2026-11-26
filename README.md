@@ -123,13 +123,79 @@ Uses real API endpoints in production mode.
 ```
 src/
 ├── lib/
+│   ├── config/
+│   │   └── navigation.ts            # Sidebar menu: sections + pages
 │   ├── components/
-│   │   └── SubscriptionTable.svelte  # Main subscription management UI
-│   ├── api.ts                       # API client and mock data
-│   └── supabase.ts                 # Database type definitions
+│   │   ├── layout/                  # Header, Sidebar
+│   │   ├── table/                   # Generic DataTable (search / filter / sort)
+│   │   │   ├── DataTable.svelte
+│   │   │   ├── types.ts             # Column<T>, TableFilter<T>
+│   │   │   └── table-utils.ts       # Pure sort/filter/search logic
+│   │   └── ui/                      # Button, Modal, PageHeader, PageSection, StatCard,
+│   │                                #   StatGrid, Badge, DetailList, LoadingState, ErrorBanner, Icon
+│   ├── features/
+│   │   └── subscriptions/           # Everything specific to the subscriptions page
+│   │       ├── SubscriptionTable.svelte   # DataTable + inline edit + confirm modal
+│   │       ├── SubscriptionStats.svelte
+│   │       └── status.ts                  # Status options, colours, PUBLIC_ACTION_STATUSES
+│   ├── utils/
+│   │   ├── format.ts                # Date / currency / label formatting
+│   │   └── async-data.svelte.ts     # createAsyncData(): loading / error / reload state
+│   ├── client/api.ts                # Browser -> SvelteKit /api routes
+│   ├── server/api.ts                # SvelteKit server -> FastAPI
+│   └── types/api.ts                 # Shared types
 └── routes/
-    └── +page.svelte                # Main dashboard page
+    ├── (app)/                       # Signed-in pages: get the sidebar + auth check
+    │   ├── +layout.svelte           # Sidebar shell
+    │   ├── +page.server.ts          # "/" redirects to the first menu item
+    │   └── subscriptions/+page.svelte
+    ├── api/                         # Proxy routes to FastAPI
+    └── auth/                        # Sign in
 ```
+
+### Adding a new page
+
+1. Create `src/routes/(app)/<page>/+page.svelte`. It automatically gets the sidebar and requires sign-in.
+2. Add an entry to `src/lib/config/navigation.ts` (label, `href: '/<page>'`, icon from
+   `src/lib/components/ui/icons.ts`). `href` is type-checked against real routes, so
+   `npm run check` fails if it points at a page that doesn't exist.
+3. Build the page from the shared pieces, e.g.:
+
+```svelte
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import DataTable from '$lib/components/table/DataTable.svelte';
+	import type { Column } from '$lib/components/table/types';
+	import PageHeader from '$lib/components/ui/PageHeader.svelte';
+	import LoadingState from '$lib/components/ui/LoadingState.svelte';
+	import ErrorBanner from '$lib/components/ui/ErrorBanner.svelte';
+	import { createAsyncData } from '$lib/utils/async-data.svelte';
+	import { formatDate, dateSortValue } from '$lib/utils/format';
+	import { clientApi } from '$lib/client/api';
+
+	const payments = createAsyncData(() => clientApi.getPayments(), []);
+	onMount(payments.reload);
+
+	const columns: Column<Payment>[] = [
+		{ id: 'customer', header: 'Customer', value: (r) => r.customer_name,
+		  sortValue: (r) => r.customer_name, searchValue: true },
+		{ id: 'paid', header: 'Paid', format: (r) => formatDate(r.paid_at),
+		  sortValue: (r) => dateSortValue(r.paid_at) }
+	];
+</script>
+
+<PageHeader title="Payments" />
+{#if payments.error}<ErrorBanner error={payments.error} onRetry={payments.reload} />{/if}
+{#if payments.isLoading}
+	<LoadingState />
+{:else}
+	<DataTable rows={payments.data} {columns} rowKey={(r) => r.id} itemLabel="payments" />
+{/if}
+```
+
+For custom cell content (badges, buttons, inline inputs), define a `{#snippet}` in the page
+and pass it as the column's `cell` (see `features/subscriptions/SubscriptionTable.svelte`).
+Dropdown filters are passed via `filters` (`TableFilter<T>`).
 
 ## Technology Stack
 

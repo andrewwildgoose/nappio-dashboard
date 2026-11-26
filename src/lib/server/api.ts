@@ -1,4 +1,4 @@
-import { FASTAPI_BASE_URL } from '$env/static/private';
+import { FASTAPI_BASE_URL, FASTAPI_API_KEY } from '$env/static/private';
 import type { TeamDataItem, SubscriptionData, SubscriptionProgressUpdate, ApiResponse } from '$lib/types/api';
 
 // Base API class for FastAPI integration (SERVER-SIDE ONLY)
@@ -13,11 +13,13 @@ class NappioApi {
 		try {
 			const url = `${this.baseUrl}${endpoint}`;
 			const response = await fetch(url, {
+				...options,
 				headers: {
 					'Content-Type': 'application/json',
-					...options.headers
-				},
-				...options
+					...options.headers,
+					// Backend requires the admin API key on /api/v1/admin/* routes
+					'X-API-Key': FASTAPI_API_KEY
+				}
 			});
 
 			if (!response.ok) {
